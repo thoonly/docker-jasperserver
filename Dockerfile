@@ -8,9 +8,9 @@ RUN wget "https://sourceforge.net/projects/jasperserver/files/JasperServer/Jaspe
          -O /tmp/jasperserver.zip  && \
     unzip /tmp/jasperserver.zip -d /usr/src/ && \
     rm /tmp/jasperserver.zip && \
-    mv /usr/src/jasperreports-server-cp-${JASPERSERVER_VERSION}-bin /usr/src/jasperreports-server && \
-    rm -r /usr/src/jasperreports-server/samples
-
+    mv /usr/src/jasperreports-server-cp-${JASPERSERVER_VERSION}-bin /usr/src/jasperreports-server 
+    # rm -r /usr/src/jasperreports-server/samples
+ 
 # To speed up local testing
 # Download manually the jasperreport server release to working dir
 # Uncomment ADD & RUN commands below and comment out above RUN command
@@ -35,6 +35,7 @@ RUN chmod a+x /entrypoint.sh && \
 
 # This volume allows JasperServer export zip files to be automatically imported when bootstrapping
 VOLUME ["/jasperserver-import"]
+# VOLUME ["/usr/local/tomcat/webapps/ROOT/WEB-INF"]
 
 # By default, JasperReports Server only comes with Postgres & MariaDB drivers
 # Copy over other JBDC drivers the deploy-jdbc-jar ant task will put it in right location
@@ -48,5 +49,7 @@ ADD web.xml /usr/local/tomcat/conf/
 # as per http://community.jaspersoft.com/documentation/jasperreports-server-install-guide/v561/setting-jvm-options-application-servers
 ENV JAVA_OPTS="-Xms1024m -Xmx2048m -XX:PermSize=32m -XX:MaxPermSize=512m -Xss2m -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled"
 
+# Config encrypt 
+#RUN  sed -i "s|encryption.on=false|encryption.on=true|g" /usr/src/jasperreports-server/buildomatic/conf_source/ieCe/classes/esapi/security-config.properties
 # Wait for DB to start-up, start up JasperServer and bootstrap if required
 ENTRYPOINT ["/entrypoint.sh"]

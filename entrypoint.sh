@@ -3,7 +3,7 @@ set -e
 
 # wait upto 30 seconds for the database to start before connecting
 /wait-for-it.sh $DB_HOST:$DB_PORT -t 30
-
+ 
 # check if we need to bootstrap the JasperServer
 if [ -f "/.do_deploy_jasperserver" ]; then
     pushd /usr/src/jasperreports-server/buildomatic
@@ -21,6 +21,7 @@ if [ -f "/.do_deploy_jasperserver" ]; then
     # rename the application war so that it can be served as the default tomcat web application
     sed -i -e "s|^# webAppNameCE.*$|webAppNameCE = ROOT|g" default_master.properties
 
+   
     # run the minimum bootstrap script to initial the JasperServer
     ./js-ant create-js-db || true #create database and skip it if database already exists
     ./js-ant init-js-db-ce 
@@ -48,8 +49,25 @@ if [ -f "/.do_deploy_jasperserver" ]; then
       ./js-import.sh --input-zip $f
     done
 
+    IMPORT_FILES=/jasperserver-import/font/*.jar
+    for f in $IMPORT_FILES
+    do
+      echo "Importing font $f..."
+      cp -rfv $f /usr/local/tomcat/webapps/ROOT/WEB-INF/lib
+    done
+
+    IMPORT_FILES=/jasperserver-import/config/*.xml
+    for f in $IMPORT_FILES
+    do
+      echo "Importing config $f..."
+      cp -rfv $f /usr/local/tomcat/webapps/ROOT/WEB-INF
+    done
+  
     popd
 fi
 
+sed -i "s|encryption.on=false|encryption.on=true|g" /usr/local/tomcat/webapps/ROOT/WEB-INF/classes/esapi/security-config.properties
+
 # run Tomcat to start JasperServer webapp
 catalina.sh run
+
